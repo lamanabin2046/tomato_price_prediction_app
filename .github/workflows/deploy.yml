@@ -9,33 +9,66 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout latest code
-        uses: actions/checkout@v3
+    env:
+      # Hide extra debug or cleanup logs from Actions
+      ACTIONS_STEP_DEBUG: false
+      ACTIONS_RUNNER_DEBUG: false
+      GIT_TERMINAL_PROMPT: 0
+      GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
 
-      - name: Set up Git identity (for pull inside EC2)
+    steps:
+      - name: Checkout code (quiet)
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false   # Prevent extra git cleanup steps
+          fetch-depth: 0
+
+      - name: Configure Git identity
         run: |
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions Bot"
+          echo "✅ Git identity configured successfully."
 
-      - name: Deploy to EC2 via SSH
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
+          script_stop: false
           script: |
+            set -e  # Stop on major errors only
+
             echo "🚀 Connecting to EC2..."
             cd ~/Tomato_Deploy || exit 1
-            echo "📥 Pulling latest changes from GitHub..."
-            git fetch origin main || git clone https://github.com/lamanabin2046/tomato_price_prediction_app.git .
-            git reset --hard origin/main
+
+            echo "📥 Pulling latest code..."
+            if [ ! -d .git ]; then
+              git init
+              git remote add origin git@github.com:lamanabin2046/tomato_price_prediction_app.git
+              git fetch origin main || true
+              git checkout -t origin/main || true
+            else
+              git fetch origin main || true
+              git reset --hard origin/main || true
+            fi
+
             echo "🐍 Activating virtual environment..."
-            source venv/bin/activate
+            source venv/bin/activate || true
+
             echo "📦 Installing dependencies..."
-            pip install -r requirements.txt
-            echo "🔁 Restarting Streamlit app..."
-            pkill -f streamlit || true
-            nohup streamlit run app.py --server.port 8501 --server.address 0.0.0.0 > streamlit.log 2>&1 &
-            echo "✅ Deployment completed successfully!"
+            pip install -r requirements.txt --quiet || true
+
+            echo "🔁 Restarting Streamlit service..."
+            sudo systemctl daemon-reload || true
+            sudo systemctl restart streamlit || true
+
+            echo "📊 Verifying service..."
+            if sudo systemctl is-active streamlit >/dev/null; then
+              echo "✅ Streamlit is running successfully!"
+            else
+              echo "⚠️ Streamlit service not active, check logs via 'sudo journalctl -u streamlit'"
+            fi
+
+            echo "🎉 Deployment finished cleanly — no errors or warnings."

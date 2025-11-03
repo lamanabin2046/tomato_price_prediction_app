@@ -14,7 +14,7 @@ st.set_page_config(
 )
 
 # Title
-st.title("🍅 Tomato Price Prediction - CI/CD Auto Deployment Test")
+st.title("🍅 Tomato Price Prediction - Auto Deployment Test by Nabin ")
 
 st.markdown("""
 This version was automatically **deployed via GitHub Actions** to AWS EC2!  

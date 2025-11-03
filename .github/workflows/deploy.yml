@@ -3,7 +3,7 @@ name: Deploy Streamlit App to EC2
 on:
   push:
     branches:
-      - main  # runs when you push to main branch
+      - main  # Trigger deployment when you push to main branch
 
 jobs:
   deploy:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout latest code
         uses: actions/checkout@v3
 
-      - name: Setup Git credentials (for EC2 pull)
+      - name: Set up Git identity (for pull inside EC2)
         run: |
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions Bot"
@@ -27,9 +27,9 @@ jobs:
           port: 22
           script: |
             echo "🚀 Connecting to EC2..."
-            cd ~/Tomato_Deploy
-            echo "📥 Pulling latest changes..."
-            git fetch origin main
+            cd ~/Tomato_Deploy || exit 1
+            echo "📥 Pulling latest changes from GitHub..."
+            git fetch origin main || git clone https://github.com/lamanabin2046/tomato_price_prediction_app.git .
             git reset --hard origin/main
             echo "🐍 Activating virtual environment..."
             source venv/bin/activate

@@ -3,38 +3,39 @@ import plotly.express as px
 import pandas as pd
 import sys
 
-# Startup confirmation for AWS EB logs
-print("✅ Streamlit app starting successfully...", file=sys.stderr)
+# Startup confirmation for AWS logs
+print("🚀 Streamlit CI/CD deployment started successfully...", file=sys.stderr)
 
 # Page configuration
 st.set_page_config(
-    page_title="Tomato Price Visualization Demo",
+    page_title="Tomato Price Prediction Dashboard",
     page_icon="🍅",
     layout="wide",
 )
 
 # Title
-st.title("🍅 Interactive Plotly Chart with Streamlit")
+st.title("🍅 Tomato Price Prediction - CI/CD Auto Deployment Test")
 
 st.markdown("""
-This demo shows how to deploy a **Streamlit + Plotly** app on AWS Elastic Beanstalk.
-Use the sidebar to select a year and continent to explore global statistics.
+This version was automatically **deployed via GitHub Actions** to AWS EC2!  
+Use the sidebar controls to explore different **years and continents**.
 """)
 
-# Load sample dataset
+# Load dataset
 df = px.data.gapminder()
 
-# Sidebar controls
-st.sidebar.header("🔧 User Controls")
+# Sidebar
+st.sidebar.header("⚙️ Control Panel")
 
 year = st.sidebar.slider(
-    "Select Year", 
-    int(df["year"].min()), 
-    int(df["year"].max()), 
+    "Select Year",
+    int(df["year"].min()),
+    int(df["year"].max()),
     2007
 )
+
 continent = st.sidebar.selectbox(
-    "Select Continent", 
+    "Select Continent",
     ["All"] + sorted(df["continent"].unique().tolist())
 )
 
@@ -44,11 +45,10 @@ if continent != "All":
 else:
     filtered_df = df[df["year"] == year]
 
-# Handle empty results
+# Handle empty dataset
 if filtered_df.empty:
-    st.warning("No data available for this selection.")
+    st.warning("⚠️ No data available for this selection.")
 else:
-    # Plot
     fig = px.scatter(
         filtered_df,
         x="gdpPercap",
@@ -58,13 +58,13 @@ else:
         hover_name="country",
         log_x=True,
         size_max=60,
-        title=f"Life Expectancy vs GDP per Capita ({year})",
+        title=f"🌍 Life Expectancy vs GDP per Capita ({year})",
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-    with st.expander("📊 Data preview"):
+    with st.expander("📊 View Data Sample"):
         st.dataframe(filtered_df.head())
 
 st.markdown("---")
-st.caption("🚀 Powered by Streamlit • Plotly • AWS Elastic Beanstalk")
+st.caption("✅ Deployed automatically using **GitHub Actions + AWS EC2**")

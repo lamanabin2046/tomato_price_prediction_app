@@ -13,22 +13,29 @@ jobs:
       - name: Checkout latest code
         uses: actions/checkout@v3
 
+      - name: Setup Git credentials (for EC2 pull)
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions Bot"
+
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
-            echo "Connecting to EC2..."
+            echo "🚀 Connecting to EC2..."
             cd ~/Tomato_Deploy
-            echo "Pulling latest changes..."
-            git pull origin main
-            echo "Activating virtual environment..."
+            echo "📥 Pulling latest changes..."
+            git fetch origin main
+            git reset --hard origin/main
+            echo "🐍 Activating virtual environment..."
             source venv/bin/activate
-            echo "Installing dependencies..."
+            echo "📦 Installing dependencies..."
             pip install -r requirements.txt
-            echo "Restarting Streamlit app..."
+            echo "🔁 Restarting Streamlit app..."
             pkill -f streamlit || true
             nohup streamlit run app.py --server.port 8501 --server.address 0.0.0.0 > streamlit.log 2>&1 &
             echo "✅ Deployment completed successfully!"

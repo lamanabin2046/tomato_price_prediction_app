@@ -1,70 +1,106 @@
+# ✅ Tomato Price Forecasting App (Fix: Boolean → Int)
 import streamlit as st
-import plotly.express as px
 import pandas as pd
-import sys
+import numpy as np
+import joblib
+import os
+from datetime import timedelta
 
-# Startup confirmation for AWS logs
-print("🚀 Streamlit CI/CD deployment started successfully...", file=sys.stderr)
+st.set_page_config(page_title="🍅 Tomato Price Forecasting", layout="wide")
+st.title("🍅 Tomato Price Forecasting App (ML Models)")
 
-# Page configuration
-st.set_page_config(
-    page_title="Tomato Price Prediction Dashboard",
-    page_icon="🍅",
-    layout="wide",
-)
+DATA_PATH = "artifacts/data/clean_data_with_lag_roll.csv"
+MODEL_DIR = "artifacts/models_lag"
+META_PATH = f"{MODEL_DIR}/model_meta.joblib"
 
-# Title
-st.title("🍅 Tomato Price Prediction - Auto Deployment Test by Next Gen AI Nabin ")
+# ✅ Load Metadata
+meta = joblib.load(META_PATH)
+feature_cols = meta["feature_cols"]
 
-st.markdown("""
-This version was automatically **deployed via GitHub Actions** to AWS EC2!  
-Use the sidebar controls to explore different **years and continents**.
-""")
+# ✅ Load Data
+@st.cache_data
+def load_data():
+    df = pd.read_csv(DATA_PATH)
+    df.rename(columns={"Date": "date"}, inplace=True)
+    df["date"] = pd.to_datetime(df["date"])
+    df.sort_values("date", inplace=True)
+    return df
 
-# Load dataset
-df = px.data.gapminder()
+df = load_data()
+st.success(f"✅ Data loaded: {df.shape[0]} rows")
 
-# Sidebar
-st.sidebar.header("⚙️ Control Panel")
+model_files = [m for m in os.listdir(MODEL_DIR)
+               if m.endswith(".joblib") and "meta" not in m]
 
-year = st.sidebar.slider(
-    "Select Year",
-    int(df["year"].min()),
-    int(df["year"].max()),
-    2007
-)
+selected_model = st.selectbox("Select Model", model_files)
 
-continent = st.sidebar.selectbox(
-    "Select Continent",
-    ["All"] + sorted(df["continent"].unique().tolist())
-)
+@st.cache_resource
+def load_model(name):
+    return joblib.load(os.path.join(MODEL_DIR, name))
 
-# Filter data
-if continent != "All":
-    filtered_df = df[(df["year"] == year) & (df["continent"] == continent)]
-else:
-    filtered_df = df[df["year"] == year]
+model = load_model(selected_model)
+st.success(f"✅ Model Loaded: {selected_model}")
 
-# Handle empty dataset
-if filtered_df.empty:
-    st.warning("⚠️ No data available for this selection.")
-else:
-    fig = px.scatter(
-        filtered_df,
-        x="gdpPercap",
-        y="lifeExp",
-        size="pop",
-        color="continent",
-        hover_name="country",
-        log_x=True,
-        size_max=60,
-        title=f"🌍 Life Expectancy vs GDP per Capita ({year})",
-    )
+forecast_days = st.radio("Forecast Days", [7, 15, 30])
 
-    st.plotly_chart(fig, use_container_width=True)
+# ✅ Predict Button
+if st.button("🔮 Predict Prices"):
+    try:
+        df_copy = df.copy()
+        future_dates = []
+        preds = []
 
-    with st.expander("📊 View Data Sample"):
-        st.dataframe(filtered_df.head())
+        last_date = df_copy["date"].iloc[-1]
 
-st.markdown("---")
-st.caption("✅ Deployed automatically using **GitHub Actions + AWS EC2**")
+        for i in range(forecast_days):
+            new_date = last_date + timedelta(days=i + 1)
+            future_dates.append(new_date)
+
+            new_row = df_copy.iloc[-1:].copy()
+            new_row["date"] = new_date
+
+            # ✅ Time-based features
+            new_row["day"] = new_row["date"].dt.day
+            new_row["month"] = new_row["date"].dt.month
+            new_row["day_of_week"] = new_row["date"].dt.dayofweek
+            new_row["is_weekend"] = (new_row["day_of_week"] >= 5).astype(int)
+            new_row["month_sin"] = np.sin(2 * np.pi * new_row["month"] / 12)
+            new_row["month_cos"] = np.cos(2 * np.pi * new_row["month"] / 12)
+
+            # ✅ Drop target if exists
+            new_row = new_row.drop(columns=["Average_Price"],
+                                   errors="ignore")
+
+            # ✅ Convert boolean → Int (Fix!)
+            bool_cols = new_row.select_dtypes(include=["bool"]).columns
+            new_row[bool_cols] = new_row[bool_cols].astype(int)
+
+            # ✅ Align features
+            new_row = new_row.reindex(columns=feature_cols, fill_value=0)
+
+            pred = model.predict(new_row)[0]
+            preds.append(pred)
+
+            # ✅ Append to df history for autoregression
+            next_row = df_copy.iloc[-1:].copy()
+            next_row["Average_Price"] = pred
+            df_copy = pd.concat([df_copy, next_row], ignore_index=True)
+
+        result_df = pd.DataFrame({
+            "Date": future_dates,
+            "Predicted Tomato Price (NPR)": preds
+        })
+
+        st.subheader(f"📈 Forecast ({forecast_days} days) using {selected_model}")
+        st.line_chart(result_df.set_index("Date"))
+        st.dataframe(result_df)
+
+        st.download_button(
+            "⬇️ Download CSV",
+            result_df.to_csv(index=False).encode("utf-8"),
+            f"forecast_{forecast_days}.csv",
+            mime="text/csv"
+        )
+
+    except Exception as e:
+        st.error(f"⚠️ Error: {str(e)}")

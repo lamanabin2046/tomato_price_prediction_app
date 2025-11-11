@@ -1,0 +1,4 @@
+Date,Model,Val_MAE,Val_MAE_std,Val_R2,Model_Path
+2025-11-11,lasso_regression,4.266030568740957,1.3104500178908718,0.828641451941667,C:\Users\User\Desktop\Kalimati\outputs/models\lasso_regression_2025-11-11_leakfree.joblib
+2025-11-11,random_forest,6.135926712391899,2.8184260614412993,0.7211317424473844,C:\Users\User\Desktop\Kalimati\outputs/models\random_forest_2025-11-11_leakfree.joblib
+2025-11-11,lightgbm,6.603279240508091,3.08171520238974,0.6772788954036463,C:\Users\User\Desktop\Kalimati\outputs/models\lightgbm_2025-11-11_leakfree.joblib

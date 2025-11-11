@@ -1,0 +1,2 @@
+Date,Model,Best_Params,Train_MAE,Val_MAE,Gap,Objective,Model_Path
+2025-11-11,random_forest,"{'n_estimators': 100, 'max_depth': 10, 'min_samples_split': 5}",1.615,4.189,2.574,5.476,C:\Users\User\Desktop\Kalimati\outputs/models/tuned_models\random_forest_tuned_latest.joblib

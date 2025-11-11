@@ -1,0 +1,8 @@
+Date,Model,Val_MAE,Val_MAE_std,Val_R2,Model_Path
+2025-11-11,linear_regression,10.991109795954305,12.860942306243432,-2.418973892482866,C:\Users\User\Desktop\Kalimati\outputs/models\linear_regression_2025-11-11_leakfree.joblib
+2025-11-11,lasso_regression,4.266030568740957,1.3104500178908718,0.828641451941667,C:\Users\User\Desktop\Kalimati\outputs/models\lasso_regression_2025-11-11_leakfree.joblib
+2025-11-11,ridge_regression,6.930330536232856,5.009604347142494,0.34602123248015865,C:\Users\User\Desktop\Kalimati\outputs/models\ridge_regression_2025-11-11_leakfree.joblib
+2025-11-11,random_forest,6.135926712391899,2.8184260614412993,0.7211317424473844,C:\Users\User\Desktop\Kalimati\outputs/models\random_forest_2025-11-11_leakfree.joblib
+2025-11-11,gradient_boost,6.697470720337046,3.0990498234622477,0.6909034607105417,C:\Users\User\Desktop\Kalimati\outputs/models\gradient_boost_2025-11-11_leakfree.joblib
+2025-11-11,xgboost,6.730278805770543,3.037660350155741,0.6984447827478838,C:\Users\User\Desktop\Kalimati\outputs/models\xgboost_2025-11-11_leakfree.joblib
+2025-11-11,lightgbm,6.603279240508091,3.08171520238974,0.6772788954036463,C:\Users\User\Desktop\Kalimati\outputs/models\lightgbm_2025-11-11_leakfree.joblib

@@ -1,2 +1,2 @@
 Date,Model,Best_Params,Train_MAE,Val_MAE,Gap,Objective,Model_Path
-2025-11-11,random_forest,"{'n_estimators': 100, 'max_depth': 10, 'min_samples_split': 5}",1.623,4.135,2.512,5.391,C:\Users\User\Desktop\Tomato_Deploy\outputs/models/tuned_models\random_forest_tuned_latest.joblib
+2025-11-12,random_forest,"{'n_estimators': 100, 'max_depth': 10, 'min_samples_split': 5}",1.623,4.233,2.61,5.538,C:\Users\User\Desktop\Tomato_Deploy\outputs/models/tuned_models\random_forest_tuned_latest.joblib

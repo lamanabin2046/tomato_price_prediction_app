@@ -36,8 +36,6 @@ custom_lag_config = {
     "Supply_Volume": [1, 3, 7],
 }
 
-
-
 custom_roll_config = {
     "Average_Price": [3, 7, 14],
     "Supply_Volume": [3, 7],
@@ -49,6 +47,9 @@ custom_roll_config = {
     "Kathmandu_Rainfall_MM": [3, 7],
 }
 
+# This will print the base directory for debugging
+base_dirr = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../"))
+print(f'Base directory: {base_dirr}')  # Printing base_dirr for debugging
 
 # =========================================================
 # 📘 Load and Clean Dataset
@@ -205,14 +206,8 @@ def train_all_models(df, target="Average_Price"):
     results_df.to_csv(results_path, index=False)
     print(f"\n📘 Saved updated CV results → {results_path}")
 
-    # Determine Top 3
-    top3 = results_df.sort_values(by="Val_MAE").head(3)
-    top3_path = os.path.join(results_dir, "top3_models.csv")
-    top3.to_csv(top3_path, index=False)
-    print(f"🏆 Saved Top 3 Summary → {top3_path}")
-
-    # Train and save only Top 3
-    for _, row in top3.iterrows():
+    # Save all models (not just top 3)
+    for _, row in results_df.iterrows():
         model_name = row["Model"]
         print(f"\n💾 Final Training (Saving): {model_name}")
 
@@ -224,7 +219,7 @@ def train_all_models(df, target="Average_Price"):
         X = df_full.drop(columns=[target, "Date"], errors="ignore")
         y = df_full[target]
 
-        pipeline = Pipeline([
+        pipeline = Pipeline([  # Impute missing values, scale features, then train the model
             ("imputer", SimpleImputer(strategy="mean")),
             ("scaler", StandardScaler()),
             ("model", model_class)
@@ -237,7 +232,7 @@ def train_all_models(df, target="Average_Price"):
         joblib.dump(X.columns.tolist(), model_path.replace(".joblib", "_features.joblib"))
         print(f"✅ Saved Model → {model_path}")
 
-    print("\n✅ Training complete! Old models replaced with current Top 3.")
+    print("\n✅ Training complete! All models saved.")
     return results_df
 
 
@@ -249,4 +244,4 @@ if __name__ == "__main__":
     df = load_data()
     print("⚙️ Training and evaluating models with custom lag/roll config...")
     results = train_all_models(df)
-    print("✅ All done — Only latest Top 3 models retained!")
+    print("✅ All done — All models saved!")

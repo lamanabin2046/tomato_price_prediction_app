@@ -18,6 +18,9 @@ from dash_app.components.prediction_section import (
     register_prediction_callbacks,
 )
 
+# Import About Us layout
+from dash_app.components.about_us import about_us_layout
+
 # ======================================================
 # 🌐 Initialize Dash App
 # ======================================================
@@ -36,6 +39,7 @@ navbar = dbc.NavbarSimple(
     children=[
         dbc.NavItem(dbc.NavLink("🏠 Dashboard", href="/")),
         dbc.NavItem(dbc.NavLink("🔮 Prediction", href="/prediction")),
+        dbc.NavItem(dbc.NavLink("📄 About Us", href="/about")),  # About Us page link
     ],
     brand="🍅 Kalimati Tomato Forecasting",
     brand_href="/",
@@ -79,7 +83,7 @@ dashboard_layout = dbc.Container(
         html.Footer(
             [
                 html.P(
-                    "Developed by Kalimati ML Team",
+                    "Developed by Kalimati Next Gen AI Team",
                     className="text-center text-muted mb-0",
                 )
             ],
@@ -108,9 +112,10 @@ def display_page(pathname):
     """Handles routing between pages."""
     if pathname == "/prediction":
         return prediction_layout
+    elif pathname == "/about":
+        return about_us_layout()  # About Us page layout
     else:
         return dashboard_layout
-
 
 # ======================================================
 # 🔁 Register All Callbacks
@@ -123,5 +128,4 @@ register_prediction_callbacks(app)
 # 🚀 Run the App
 # ======================================================
 if __name__ == "__main__":
-    print("🌐 Running Dash app → http://127.0.0.1:8050/")
     app.run(debug=True, port=8050)

@@ -1,35 +1,31 @@
-name: Deploy Streamlit App to EC2
+name: Deploy Dash App to EC2
 
 on:
   push:
     branches:
-      - main  # Trigger deployment when you push to main branch
+      - main  # Trigger deployment on pushes to main branch
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     env:
-      # Hide extra debug or cleanup logs from Actions
-      ACTIONS_STEP_DEBUG: false
-      ACTIONS_RUNNER_DEBUG: false
       GIT_TERMINAL_PROMPT: 0
       GIT_SSH_COMMAND: "ssh -o StrictHostKeyChecking=no"
 
     steps:
-      - name: Checkout code (quiet)
+      - name: Checkout code
         uses: actions/checkout@v3
         with:
-          persist-credentials: false   # Prevent extra git cleanup steps
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Configure Git identity
         run: |
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions Bot"
-          echo "✅ Git identity configured successfully."
 
-      - name: Deploy to EC2
+      - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -38,37 +34,38 @@ jobs:
           port: 22
           script_stop: false
           script: |
-            set -e  # Stop on major errors only
+            set -e
+            echo "🚀 Connecting to EC2 and deploying Dash app..."
 
-            echo "🚀 Connecting to EC2..."
             cd ~/Tomato_Deploy || exit 1
 
             echo "📥 Pulling latest code..."
             if [ ! -d .git ]; then
               git init
               git remote add origin git@github.com:lamanabin2046/tomato_price_prediction_app.git
-              git fetch origin main || true
-              git checkout -t origin/main || true
+              git fetch origin main
+              git checkout -t origin/main
             else
-              git fetch origin main || true
-              git reset --hard origin/main || true
+              git fetch origin main
+              git reset --hard origin/main
             fi
 
             echo "🐍 Activating virtual environment..."
-            source venv/bin/activate || true
+            source venv/bin/activate || python3 -m venv venv && source venv/bin/activate
 
-            echo "📦 Installing dependencies..."
-            pip install -r requirements.txt --quiet || true
+            echo "📦 Installing/updating dependencies..."
+            pip install -r requirements.txt --quiet
 
-            echo "🔁 Restarting Streamlit service..."
+            echo "⚙️ Restarting Dash service..."
             sudo systemctl daemon-reload || true
-            sudo systemctl restart streamlit || true
+            sudo systemctl restart dashapp || true
 
-            echo "📊 Verifying service..."
-            if sudo systemctl is-active streamlit >/dev/null; then
-              echo "✅ Streamlit is running successfully!"
+            echo "📊 Checking Dash service status..."
+            if sudo systemctl is-active dashapp >/dev/null; then
+              echo "✅ Dash app running successfully!"
             else
-              echo "⚠️ Streamlit service not active, check logs via 'sudo journalctl -u streamlit'"
+              echo "⚠️ Dash service inactive — check logs with:"
+              echo "sudo journalctl -u dashapp -f"
             fi
 
-            echo "🎉 Deployment finished cleanly — no errors or warnings."
+            echo "🎉 Deployment completed successfully!"
